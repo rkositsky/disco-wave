@@ -1,0 +1,8 @@
+# pycharm
+.idea/
+
+# Python
+__pycache__/
+
+# testing
+var/
