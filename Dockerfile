@@ -15,24 +15,20 @@ MAINTAINER DaveLab <lab.dave@gmail.com>
 # update the OS related packages
 RUN apt-get update -y && apt-get install -y \
     build-essential \
-    libnss-sss \
     curl \
     vim \
     less \
     wget \
     unzip \
     cmake \
+    gcc-8-base \
+    libmpx2 \
+    libgcc-8-dev \
+    libc6-dev \
     python3 \
     gawk \
-    python-pip \
-    zlib1g-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    libbz2-dev \
-    liblzma-dev \
+    python3-pip \
     bzip2 \
-    libcurl4-openssl-dev \
-    libssl-dev \
     git \
     autoconf \
     bsdmainutils \
@@ -40,15 +36,15 @@ RUN apt-get update -y && apt-get install -y \
 
 # install Python libraries
 WORKDIR /usr/local/bin
-RUN pip install argparse
-RUN pip install pysam
+RUN pip3 install argparse
+RUN pip3 install pysam
 
 # install R required dependencies
 RUN R --vanilla -e 'install.packages(c("optparse", "tidyverse", "gridExtra", "viridis"), repos="http://cran.us.r-project.org")'
 
 # clone disco-wave repo
 ADD https://api.github.com/repos/rkositsky/disco-wave/git/refs/heads/ version.json
-RUN git clone https://github.com/rkositsky/disco-wave.git
+RUN git clone https://github.com/rkositsky/disco-wave.git /disco-wave
 
 # add disco-wave repo to SYSPATH
 ENV PATH /disco-wave:$PATH
