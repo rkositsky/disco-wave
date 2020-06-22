@@ -25,6 +25,9 @@ RUN apt-get update -y && apt-get install -y \
     libmpx2 \
     libgcc-8-dev \
     libc6-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
     python3 \
     gawk \
     python3-pip \
