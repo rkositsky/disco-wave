@@ -15,10 +15,13 @@ import sys
 def parse_args(args=None):
 	"""Parse command line arguments"""
 	parser = argparse.ArgumentParser(
-		description="Find translocations using discordant reads from tiled reads "
+		description="Find translocations using discordant reads from tiling windows "
 		"from short-read sequencing aligned files")
 
 	parser.add_argument("in_bam", help="Input BAM file")
+
+	parser.add_argument("output_dir",
+		help="Directory where output will be written")
 
 	parser.add_argument("--sample_name", default="",
 		help="Sample name")
@@ -39,9 +42,9 @@ def parse_args(args=None):
 		help="Minimum supporting reads for a translocation to be reported."
 		" Default: 10 read pairs")
 
-	parser.add_argument("--nr_cpus", default=4, type=int,
+	parser.add_argument("--nr_cpus", default=1, type=int,
 		help="Number of CPUs for parallelizing discordant read selection. "
-		"Default: 4")
+		"Default: 1")
 
 	# TODO: add option to define genome. Hardcoded for GENCODE right now.
 	results = parser.parse_args(args)
@@ -95,14 +98,13 @@ def main(args):
 		os.mkdir(work_dir)
 
 	# Create output directory
-	output_dir = "output_dir"
-	if not os.path.exists(output_dir):
-		os.mkdir(output_dir)
+	if not os.path.exists(args.output_dir):
+		os.mkdir(args.output_dir)
 
 	# 1. Extract discordant reads
 	print("Extracting discordant reads...")
 	extraction_script = os.path.join(tool_dir, "select_discordant_reads.bash")
-	diff_chrom_bam = os.path.join(output_dir, "discordant_reads.diff_chrom.bam")
+	diff_chrom_bam = os.path.join(args.output_dir, "discordant_reads.diff_chrom.bam")
 	subprocess.call([extraction_script, args.in_bam, diff_chrom_bam, 
 		str(args.nr_cpus), str(args.min_mapping_quality)])
 
@@ -128,7 +130,7 @@ def main(args):
 	subprocess.call(["Rscript", "--vanilla", tiling_script, 
 		"--helper_functions", tiling_script_helper_functions, 
 		"--input_directory", tiling_coverage_dir,
-		"--output_directory", output_dir,
+		"--output_directory", args.output_dir,
 		"--sample_name", args.sample_name,
 		"--min_reads", str(args.min_read_pairs),
 		"--merge_distance", str(args.merge_distance)])
