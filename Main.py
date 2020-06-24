@@ -60,7 +60,7 @@ def run_chrom_coverages(tiling_BED, input_dir, coverage_dir, diff_chrom_bam,
 	if tiling_BED == "":
 		tiling_BED = os.path.join(resource_dir, "BCL6_MYC_BCL2_FISH.tiled.bed")
 	else:
-		tiling_BED = args.tiling_BED
+		tiling_BED = tiling_BED
 	genome_file = os.path.join(resource_dir, "hg38.sizes.gencode")
 
 	if not os.path.exists(coverage_dir):

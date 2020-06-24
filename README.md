@@ -4,7 +4,7 @@ DiscoWave identifies interchromosomal translocations from paired-end aligned
 sequencing data. It focuses on just the discordant read pairs that map betwen 
 different chromosomes. It accounts for variability in alignment quality at 
 different loci by normalizing for the number of discordant reads at each tiling
- window examined. 
+ window examined.
  
 One of the outputs is a scatterplot of stats for each tiling window. For each 
 possible partner chromsome, the percentage of discordant reads mapping to that 
@@ -15,16 +15,28 @@ are going to just one other chromosome, with good coverage.
 Currently this tool is geared towards displaying MYC, BCL2, and BCL6 
 translocations. Further generalization is in progress.
 
-### Usage
+## Installation
+
+1. Clone this repository and install missing [dependencies](#dependencies)
+2. Use Docker to access this repository with dependencies pre-installed
+
+## Usage
+
+### Source usage
+
 ```
 usage: Main.py [-h] [--sample_name SAMPLE_NAME] [--tiling_BED TILING_BED]
                [--min_mapping_quality MIN_MAPPING_QUALITY]
                [--merge_distance MERGE_DISTANCE]
                [--min_read_pairs MIN_READ_PAIRS] [--nr_cpus NR_CPUS]
-               in_bam
-               
+               in_bam output_dir
+
+Find translocations using discordant reads from tiling windows from short-read
+sequencing aligned files
+
 positional arguments:
   in_bam                Input BAM file
+  output_dir            Directory where output will be written
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -38,17 +50,27 @@ optional arguments:
                         Minimum read quality for read that get considered.
   --merge_distance MERGE_DISTANCE
                         Maximum distance between reads where they're still
-                        considered part of the same translocation. Default:
-                        100 bp
+                        considered part of the same translocation. Default: 0
+                        bp
   --min_read_pairs MIN_READ_PAIRS
                         Minimum supporting reads for a translocation to be
                         reported. Default: 10 read pairs
   --nr_cpus NR_CPUS     Number of CPUs for parallelizing discordant read
-                        selection. Default: 4
-
+                        selection. Default: 1
 ```
 
-### Requirements
+Example command, given my_sample.bam and my_sample.bam.bai in the current directory:
+`python3 Main.py my_sample.bam my_sample_out_dir --nr_cpus 6 --sample_name my_sample`
+
+### Docker usage
+
+A Docker image is available at davelabhub:disco-wave.
+
+Example Docker command, given my_sample.bam and my_sample.bam.bai in the current directory:
+`sudo docker run --rm --user root -v ${PWD}:/data davelabhub/disco-wave:latest /bin/bash -c "python3 /disco-wave/Main.py /data/my_sample.bam /data/my_sample_out_dir --sample_name my_sample --nr_cpus 7"`
+
+
+## Dependencies
 
 Where available, versions are noted. Other versions may work, but have not been tested.
 
