@@ -50,11 +50,11 @@ ADD https://api.github.com/repos/rkositsky/disco-wave/git/refs/heads/ version.js
 RUN git clone https://github.com/rkositsky/disco-wave.git /disco-wave
 
 # add disco-wave repo to SYSPATH
-ENV PATH /disco-wave:$PATH
+ENV PATH=/disco-wave/:$PATH
 
 # change the permission of the repo
 RUN chmod 777 -R /disco-wave
 
 # make the Main.py as default script to execute when no command is given
-CMD ["python3 Main.py -h"]
+CMD ["python3 Main.py"]
 
