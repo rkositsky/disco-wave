@@ -20,8 +20,17 @@ def parse_args(args=None):
 
 	parser.add_argument("in_bam", help="Input BAM file")
 
-	parser.add_argument("output_dir",
-		help="Directory where output will be written")
+	parser.add_argument("--out_translocation_table",
+		help="File path to write tab-separated table of candidate translocations",
+		default="candidate_translocations.tsv")
+
+	parser.add_argument("--out_discordant_bam",
+		help="File path to write subsetted BAM with only discordantly mapped reads",
+		default="discordant_reads.diff_chrom.bam")
+	
+	parser.add_argument("--figure_output_dir",
+		help="Directory where output figure will be written",
+		default="figure_output_dir")
 
 	parser.add_argument("--sample_name", default="",
 		help="Sample name")
@@ -97,21 +106,17 @@ def main(args):
 	if not os.path.exists(work_dir):
 		os.mkdir(work_dir)
 
-	# Create output directory
-	if not os.path.exists(args.output_dir):
-		os.mkdir(args.output_dir)
-
 	# 1. Extract discordant reads
 	print("Extracting discordant reads...")
 	extraction_script = os.path.join(tool_dir, "select_discordant_reads.bash")
-	diff_chrom_bam = os.path.join(args.output_dir, "discordant_reads.diff_chrom.bam")
-	subprocess.call([extraction_script, args.in_bam, diff_chrom_bam, 
+	subprocess.call([extraction_script, args.in_bam, args.out_discordant_bam, 
 		str(args.nr_cpus), str(args.min_mapping_quality)])
 
 	# 2. Sort out the other chromosomes by where their mate maps to
 	print("Sorting reads by their mate chromosome...")
 	bam_by_chrom_dir = os.path.join(work_dir, "bams_by_chrom")
-	sort_BAM_file_by_mate_chromosome.sort_BAM(diff_chrom_bam, bam_by_chrom_dir)
+	sort_BAM_file_by_mate_chromosome.sort_BAM(args.out_discordant_bam, 
+		bam_by_chrom_dir)
 
 	# 3. Run bedtools coverage on tiled windows
 	print("Getting tiling coverages...")
@@ -119,7 +124,7 @@ def main(args):
 	# TODO: include compatibility with other genome versions
 	run_chrom_coverages(tiling_BED = args.tiling_BED, 
 		input_dir = bam_by_chrom_dir, coverage_dir = tiling_coverage_dir,
-		diff_chrom_bam = diff_chrom_bam, resource_dir = resource_dir)
+		diff_chrom_bam = args.out_discordant_bam, resource_dir = resource_dir)
 
 	# 4. Run R script to get the pretty pictures and the big output table
 	print("Running tiling coverage parsing script and generating output table...")
@@ -130,7 +135,8 @@ def main(args):
 	subprocess.call(["Rscript", "--vanilla", tiling_script, 
 		"--helper_functions", tiling_script_helper_functions, 
 		"--input_directory", tiling_coverage_dir,
-		"--output_directory", args.output_dir,
+		"--output_table", args.out_translocation_table,
+		"--figure_output_directory", args.figure_output_dir,
 		"--sample_name", args.sample_name,
 		"--min_reads", str(args.min_read_pairs),
 		"--merge_distance", str(args.merge_distance)])

@@ -25,21 +25,31 @@ translocations. Further generalization is in progress.
 ### Source usage
 
 ```
-usage: Main.py [-h] [--sample_name SAMPLE_NAME] [--tiling_BED TILING_BED]
+usage: Main.py [-h] [--out_translocation_table OUT_TRANSLOCATION_TABLE]
+               [--out_discordant_bam OUT_DISCORDANT_BAM]
+               [--figure_output_dir FIGURE_OUTPUT_DIR]
+               [--sample_name SAMPLE_NAME] [--tiling_BED TILING_BED]
                [--min_mapping_quality MIN_MAPPING_QUALITY]
                [--merge_distance MERGE_DISTANCE]
                [--min_read_pairs MIN_READ_PAIRS] [--nr_cpus NR_CPUS]
-               in_bam output_dir
+               in_bam
 
 Find translocations using discordant reads from tiling windows from short-read
 sequencing aligned files
 
 positional arguments:
   in_bam                Input BAM file
-  output_dir            Directory where output will be written
 
 optional arguments:
   -h, --help            show this help message and exit
+  --out_translocation_table OUT_TRANSLOCATION_TABLE
+                        File path to write tab-separated table of candidate
+                        translocations
+  --out_discordant_bam OUT_DISCORDANT_BAM
+                        File path to write subsetted BAM with only
+                        discordantly mapped reads
+  --figure_output_dir FIGURE_OUTPUT_DIR
+                        Directory where output figure will be written
   --sample_name SAMPLE_NAME
                         Sample name
   --tiling_BED TILING_BED
@@ -60,14 +70,15 @@ optional arguments:
 ```
 
 Example command, given my_sample.bam and my_sample.bam.bai in the current directory:
-`python3 Main.py my_sample.bam my_sample_out_dir --nr_cpus 6 --sample_name my_sample`
+`python3 Main.py my_sample.bam --sample_name my_sample --nr_cpus 6`
 
 ### Docker usage
 
 A Docker image is available at davelabhub:disco-wave.
 
 Example Docker command, given my_sample.bam and my_sample.bam.bai in the current directory:
-`sudo docker run --rm --user root -v ${PWD}:/data davelabhub/disco-wave:latest /bin/bash -c "python3 /disco-wave/Main.py /data/my_sample.bam /data/my_sample_out_dir --sample_name my_sample --nr_cpus 7"`
+`sudo docker run --rm --user root -v ${PWD}:/data davelabhub/disco-wave:latest /bin/bash -c "python3 /disco-wave/Main.py /data/my_sample.bam --out_translocation_table /data/candidate_translocations.tsv --out_discordant_bam /data/discordant_reads.diff_chrom.bam --figure_output_dir /data/supporting_figures --sample_name my_sample --nr_cpus 7"`
+When using Docker, it's helpful to define the outputs explicitly so that they remain after the Docker command finishes.
 
 
 ## Dependencies

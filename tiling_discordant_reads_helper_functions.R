@@ -141,21 +141,17 @@ collapse_adjacent_windows <- function(df, merge_distance) {
 }
 
 write_candidate_translocations <- function(
-  regions_df, out_dir, sample_name, min_total_reads = 10, min_pct = 75,
+  regions_df, out_file, sample_name, min_total_reads = 10, min_pct = 75,
   merge_distance = 0) {
   # Outputs candidate translocations to a tab-separated file
   # Arguments:
   #     sample_regions_list: list with dataframe for each sample
-  #     out_dir: where to write file
+  #     out_file: where to write output file
   #     samples: vector with sample names to plot
   #     sample_nicknames: rownames are sample IDs, has a column named "nickname" for plotting
   #     min_total_reads: minimum reads for a window to be kept
   #     min_pct: minimum percent for a window to be kept
   #     merge_distance: maximum distance that windows can be apart when they're merged
-  
-  out_file <- paste0(out_dir, "detected_translocation_regions.min", 
-                     min_total_reads,"reads.min", min_pct, "pct.merge", 
-                     merge_distance, "bp.tsv")
   
   # For each sample, filter translocations, merge them, and then append to output dataframe
   # Create new columns for filtering
