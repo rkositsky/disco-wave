@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/python3
 
 # Get discordant reads and identify translocations using tiling windows.
 #
