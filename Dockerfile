@@ -57,5 +57,5 @@ ENV PATH="/disco-wave/Main.py:$PATH"
 RUN chmod 777 -R /disco-wave
 
 # make the Main.py as default script to execute when no command is given
-CMD ["python3 Main.py -h"]
+CMD ["Main.py"]
 
