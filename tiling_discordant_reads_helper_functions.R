@@ -100,12 +100,12 @@ collapse_adjacent_windows <- function(df, merge_distance) {
   #     merge_distance: maximum distance between two adjacent windows that
   #                     can be merged
   
-  # Return immediately if there's no passing rows in dataframe
-  if(nrow(df) == 0) {
+  # Return immediately if there's no need to collapse (0 or 1 rows in dataframe)
+  if(nrow(df) < 2) {
     return(df)
   }
   
-  # Now we can assume there's at least one window. Copy over first row.
+  # Now we can assume there's at least two rows. Copy over first row.
   output_df <- df[1,]
   
   # We assume that the input windows are sorted by sample and chromosomal position.
