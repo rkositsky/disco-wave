@@ -62,4 +62,5 @@ write_candidate_translocations(regions_df = regions_df,
                                out_file = opt$output_table, 
                                sample_name= opt$sample_name,
                                min_total_reads = opt$min_reads,
+                               min_pct = 50.01,
                                merge_distance = opt$merge_distance)
