@@ -98,3 +98,4 @@ Where available, versions are noted. Other versions may work, but have not been 
 	- tidyverse
 	- gridExtra
 	- viridis
+  - microbiome 
