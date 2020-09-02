@@ -43,7 +43,8 @@ RUN pip3 install argparse
 RUN pip3 install pysam
 
 # install R required dependencies
-RUN R --vanilla -e 'install.packages(c("optparse", "tidyverse", "gridExtra", "viridis"), repos="http://cran.us.r-project.org")'
+RUN R --vanilla -e 'install.packages(c("optparse", "tidyverse", "gridExtra", "viridis", "BiocManager"), repos="http://cran.us.r-project.org")'
+RUN R --vanilla -e 'BiocManager::install("microbiome")'
 
 # clone disco-wave repo
 ADD https://api.github.com/repos/rkositsky/disco-wave/git/refs/heads/ version.json
