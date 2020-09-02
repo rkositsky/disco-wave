@@ -1,8 +1,9 @@
 # Functions to process single-sample discordant reads detection
 
-library(tidyverse)
-library(gridExtra)
-library(viridis)
+library("tidyverse")
+library("gridExtra")
+library("viridis")
+library("microbiome")
 
 
 #### Input parsing ####
@@ -141,8 +142,8 @@ collapse_adjacent_windows <- function(df, merge_distance) {
 }
 
 write_candidate_translocations <- function(
-  regions_df, out_file, sample_name, min_total_reads = 10, min_pct = 75,
-  merge_distance = 0) {
+  regions_df, out_file, sample_name, min_total_reads = 10, min_pct = 25,
+  max_evenness = 0.5, merge_distance = 0) {
   # Outputs candidate translocations to a tab-separated file
   # Arguments:
   #     sample_regions_list: list with dataframe for each sample
@@ -151,17 +152,21 @@ write_candidate_translocations <- function(
   #     sample_nicknames: rownames are sample IDs, has a column named "nickname" for plotting
   #     min_total_reads: minimum reads for a window to be kept
   #     min_pct: minimum percent for a window to be kept
+  #     max_evenness: maximum Simpson evenness for a window to be kept; measures chromosome uniformity
   #     merge_distance: maximum distance that windows can be apart when they're merged
   
   # For each sample, filter translocations, merge them, and then append to output dataframe
   # Create new columns for filtering
   df <- regions_df
   df$pct_reads_to_partner <- apply(df[,grep("pct_", colnames(df))], FUN=max, MARGIN=1)
+  df$evenness <- evenness(t(as.matrix(df[, grep("^chr[^o]+", colnames(df), value = T, perl = T)])),
+                          index = "simpson") %>% pull(simpson)
   df$sample <- sample_name
 
   # Filter by total number of discordant reads and an overabundance of one chromosome
-  df <- df %>% filter(all >= min_total_reads) 
+  df <- df %>% filter(all >= min_total_reads)
   df <- df %>% filter(pct_reads_to_partner >= min_pct)
+  df <- df %>% filter(evenness <= max_evenness)
   
   ## Get the partner chromosome now that you have non-NAN values for things after filtering
   # First get the column names that are pct_chr#.
