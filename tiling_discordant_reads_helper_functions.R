@@ -143,7 +143,7 @@ collapse_adjacent_windows <- function(df, merge_distance) {
 
 write_candidate_translocations <- function(
   regions_df, out_file, sample_name, min_total_reads = 10, min_pct = 25,
-  max_evenness = 0.5, merge_distance = 0) {
+  min_evenness = 0.4, merge_distance = 0) {
   # Outputs candidate translocations to a tab-separated file
   # Arguments:
   #     sample_regions_list: list with dataframe for each sample
@@ -166,7 +166,7 @@ write_candidate_translocations <- function(
   # Filter by total number of discordant reads and an overabundance of one chromosome
   df <- df %>% filter(all >= min_total_reads)
   df <- df %>% filter(pct_reads_to_partner >= min_pct)
-  df <- df %>% filter(evenness <= max_evenness)
+  df <- df %>% filter(evenness >= min_evenness)
   
   ## Get the partner chromosome now that you have non-NAN values for things after filtering
   # First get the column names that are pct_chr#.
@@ -177,7 +177,7 @@ write_candidate_translocations <- function(
   df$partner_chrom <- substring(pct_colnames[apply(df[,pct_colnames], MARGIN=1, FUN=which.max)], first=5)
   
   # Reorder columns
-  df <- df %>% select("sample", 1:5, "pct_reads_to_partner", "partner_chrom", everything())
+  df <- df %>% select("sample", 1:5, "pct_reads_to_partner", "partner_chrom", "evenness", everything())
   
   # Merge adjacent windows if they share the same chromosome
   df <- collapse_adjacent_windows(df, merge_distance)
