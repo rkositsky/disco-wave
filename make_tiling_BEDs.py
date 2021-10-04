@@ -10,6 +10,7 @@
 import argparse
 import os
 import subprocess
+import sys
 
 
 def parse_args(args=None):
@@ -20,22 +21,23 @@ def parse_args(args=None):
 
 	parser.add_argument("input_dir",
 		help="Input directory with BED files per each region in which to call" \
-		" translocations.")
+		" translocations.", type=str)
 
 	parser.add_argument("tmp_dir",
-		help="Output directory for temporary files")
+		help="Output directory for temporary files", type=str)
 
 	parser.add_argument("output_file",
 		help="Output path of final BED file with tiled regions of each gene " \
-		"region given in input_dir")
+		"region given in input_dir", type=str)
 
-	parser.add_argument("tiling_size", default = 20,
+	parser.add_argument("-s", "--tiling_size", default=20,
 		help="Input size of tiled windows. Default is 20bp. Smaller windows " \
-		"provide greater resoultion at the cost of computation time.")
+		"provide greater resoultion at the cost of computation time.",
+		type=int)
 
-	parser.add_argument("panel_bed", default = None,
+	parser.add_argument("-p", "--panel_bed",
 		help="Input BED file of capture panel regions. Do not specify for " \
-		"whole genome sequencing.")
+		"whole genome sequencing.", type=str)
 
 	results = parser.parse_args(args)
 
@@ -60,55 +62,60 @@ def create_windows(in_bed, out_bed, tiling_size):
 				start, start + tiling_size, annot))
 
 
-def intersect_bed_with_baits(tiled_bed, bait_bed, output_bed):
+def intersect_bed_with_baits(tiled_bed, panel_bed, output_bed, tmp_dir):
 	"""Intersects windows with captured bed file, then merges duplicate lines"""
 	
 	# Instead of messing with subprocess.PIPE and closing processes, just
 	# write to a temporary file and run two separate commands
-	tmp_bed = "intersect.tmp.bed"
+	tmp_bed = os.path.join(tmp_dir, "intersect.tmp.bed")
 	with open(tmp_bed, "w") as out_f:
 		subprocess.call(["bedtools", "intersect", "-a", tiled_bed, 
-			"-b", bait_bed, "-wa"], stdout=out_f)
+			"-b", panel_bed, "-wa"], stdout=out_f)
 
 	with open(output_bed, "w") as out_f:
 		subprocess.call(["uniq", tmp_bed], stdout=out_f)
 
 	os.remove(tmp_bed)
 
-def main(tiling_size, bait_bed, in_dir, tmp_dir, out_file):
 
-	#bait_bed = os.path.expanduser("~/Dropbox/Rachel/Projects/Gene_panel/Twist_design/2019-10-21/annotation_beds/Twist_8MB_panel_with_ERCCs.gencode.sorted.bed")
-	bait_bed = os.path.expanduser("~/Dropbox/Rachel/Projects/Gene_panel/Twist_design/2019-10-21/annotation_beds/Twist_8MB_panel_with_ERCCs.non-repetitive.bed")
-	in_dir = os.path.expanduser("~/Dropbox/Rachel/Projects/WHO/Translocations/annotation/Vysis_FISH")
-	#out_dir = os.path.expanduser("~/Dropbox/Rachel/Projects/WHO/Translocations/bed/tiling_windows/{0}bp_tiling".format(tiling_size))
-	out_dir = os.path.expanduser("~/Dropbox/Rachel/Projects/WHO/Translocations/bed/tiling_windows/{0}bp_tiling_no_repeats".format(tiling_size))
+def main(input_dir, tmp_dir, output_file, tiling_size, panel_bed):
 
-	if not os.path.exists(out_dir):
-		os.mkdir(out_dir)
+	# Make temporary output folder
+	if not os.path.exists(tmp_dir):
+		os.mkdir(tmp_dir)
 
-	# Create captured tiled BEDs and merge all three together
-	final_bed = os.path.join(out_dir, "BCL6_MYC_BCL2_FISH.tiled.bed")
-	with open(final_bed, "a") as out_f:
-		for gene in ["BCL6", "MYC", "BCL2"]:
-			in_file = os.path.join(in_dir, gene + "_FISH.bed")
-			out_file = os.path.join(out_dir, gene + "_FISH.tiled.all.bed")
-			intersect_file = os.path.join(out_dir, gene + "_FISH.tiled.bed")
+	# Create captured tiled BEDs and merge all together
+	with open(output_file, "a") as out_f:
+		input_files = [f for f in os.listdir(input_dir)
+					   if os.path.isfile(os.path.join(input_dir, f))]
+		if input_files == []:
+			raise Exception(f"No input files found for tiling in {input_dir}")
 
-			create_windows(in_file, out_file, tiling_size)
-			intersect_bed_with_baits(out_file, bait_bed, intersect_file)
+		for in_file in input_files:
+			full_in_file = os.path.join(input_dir, in_file)
+			tmp_out1 = os.path.join(tmp_dir, f"{in_file}.tiled.all.bed")
+			tmp_out2 = os.path.join(tmp_dir, f"{in_file}.tiled.panel.bed")
+
+			create_windows(full_in_file, tmp_out1, tiling_size)
+			if panel_bed == None:
+				tmp_out2 = tmp_out1
+			else:
+				intersect_bed_with_baits(tmp_out1, panel_bed, tmp_out2, tmp_dir)
 
 			# Append tiled BED to final merged version
-			with open(intersect_file, "r") as in_f:
+			with open(tmp_out2, "r") as in_f:
 				out_f.write(in_f.read())
 
 	# Make unique version
-	tmp_bed = "uniq.merged.bed"
+	tmp_bed = os.path.join(tmp_dir, "uniq.merged.bed")
 
 	# Copy intersect_file to tmp_bed
-	subprocess.call(["cp", final_bed, tmp_bed])
+	subprocess.call(["cp", output_file, tmp_bed])
 
-	# Copy unique version of tmp_bed to final_bed
-	with open(final_bed, "w") as out_f:
+	#### TODO: add BED file sorting?? #######
+
+	# Copy unique version of tmp_bed to output_file
+	with open(output_file, "w") as out_f:
 		subprocess.call(["uniq", tmp_bed], stdout=out_f)
 
 	os.remove(tmp_bed)
@@ -116,5 +123,6 @@ def main(tiling_size, bait_bed, in_dir, tmp_dir, out_file):
 
 if __name__ == "__main__":
 	args = parse_args(sys.argv[1:])
-	main(args.tiling_size, args.panel_bed, args.input_dir, args.output_dir)
+	main(args.input_dir, args.tmp_dir, args.output_file, args.tiling_size, 
+		args.panel_bed)
 
