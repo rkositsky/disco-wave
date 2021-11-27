@@ -47,19 +47,21 @@ def parse_args(args=None):
 def create_windows(in_bed, out_bed, tiling_size):
 	"""Prints tiling window to bed file"""
 
-	# Read in informations
-	with open(in_bed, "r") as in_f:
-		bed_line = in_f.readline().strip().split("\t")
-		chrom = bed_line[0]
-		in_start = int(bed_line[1])
-		in_end = int(bed_line[2])
-		annot = bed_line[3]
+	# Read in each line
+	with open(in_bed, "r") as in_f, open(out_bed, "w") as out_f:
+		for line in in_f:
+			if "track" in line:
+				continue
 
-	# Write out tiled regions
-	with open(out_bed, "w") as out_f:
-		for start in range(in_start, in_end, tiling_size):
-			out_f.write("{0}\t{1}\t{2}\t{3}\n".format(chrom, 
-				start, start + tiling_size, annot))
+			bed_line = line.strip().split("\t")
+			chrom = bed_line[0]
+			in_start = int(bed_line[1])
+			in_end = int(bed_line[2])
+			annot = bed_line[3]
+			
+			for start in range(in_start, in_end, tiling_size):
+				out_f.write("{0}\t{1}\t{2}\t{3}\n".format(chrom, 
+					start, start + tiling_size, annot))
 
 
 def intersect_bed_with_baits(tiled_bed, panel_bed, output_bed, tmp_dir):
