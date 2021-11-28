@@ -53,9 +53,11 @@ if (!dir.exists(fig_out_dir)) {
 regions_df <- parse_bedtools_coverages(in_dir = in_dir)
 
 #### Plot figures of pct reads going to each chromosome vs. # reads ####
+# Get gene names from the 4th column of the tiling BED files
 plot_pct_chrom_for_gene(sample_df = regions_df,
                         out_dir = fig_out_dir,
-                        sample_nickname = opt$sample_name)
+                        sample_nickname = opt$sample_name,
+                        genes = unique(regions_df$gene))
 
 # Write output
 write_candidate_translocations(regions_df = regions_df, 
