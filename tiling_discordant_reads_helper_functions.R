@@ -184,7 +184,7 @@ write_candidate_translocations <- function(
   
   # Write to output file, overwriting and initializing the column names for 
   # the first sample and appending after that
-  write_tsv(df, path=out_file, na = ".")
+  write_tsv(df, file=out_file, na = ".")
 }
 
 
